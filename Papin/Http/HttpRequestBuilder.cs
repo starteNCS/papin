@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Text;
 
 namespace Papin.Http;
 
@@ -9,9 +10,48 @@ public class HttpRequestBuilder
     private HttpVersion? _version;
 
     private IEnumerable<HttpHeader>? _headers;
-    
+
+    public List<byte> Bytes { get; } = new();
+    public int? HeaderLength { get; private set; }
+
+    /// <summary>
+    /// Start the http request builder using a full plain text http request
+    /// </summary>
+    /// <param name="request">Fully received http request</param>
     public HttpRequestBuilder(string request)
     {
+    }
+
+    /// <summary>
+    /// Start the http request and build it by hand
+    /// </summary>
+    public HttpRequestBuilder()
+    {
+    }
+
+    /// <summary>
+    /// Parses the Request Message Header (Request-Line and Headers)
+    /// </summary>
+    public void ParseRequestMessageHeader(byte[] bytes)
+    {
+        HeaderLength = bytes.Length;
+        ParseRequestMessageHeader(Encoding.ASCII.GetString(bytes));
+    }
+    
+    /// <summary>
+    /// Parses the Request Message Header (Request-Line and Headers)
+    /// </summary>
+    public void ParseRequestMessageHeader(string requestMessageHeader)
+    {
+        if (HeaderLength == null)
+        {
+            HeaderLength = Encoding.ASCII.GetByteCount(requestMessageHeader);
+        }
+        
+        var lines = requestMessageHeader.Split("\r\n");
+        
+        ParseRequestLine(lines[0]);
+        ParseHeaderFields(lines[1..]);
     }
 
     /// <summary>
@@ -44,16 +84,17 @@ public class HttpRequestBuilder
     {
         _headers = headerFields.Select(header =>
         {
-            var parts = header.Replace(": ", ":").Split(":");
-            if (parts.Length != 2)
+            var separator = header.IndexOf(':');
+            if (separator == -1)
             {
                 throw new ArgumentException("Invalid Header received");
             }
             
             return new HttpHeader
             {
-                Key = parts[0],
-                Value = parts[1]
+                Key = header[..separator],
+                // + 2 for the colon itself and the space character
+                Value = header[(separator + 2)..]
             };
         });
     }
@@ -70,7 +111,7 @@ public class HttpRequestBuilder
             return false;
         }
 
-        if (_version != HttpVersion.HTTP1_0)
+        if (_version != HttpVersion.HTTP1_1)
         {
             return false;
         }
@@ -95,7 +136,34 @@ public class HttpRequestBuilder
             Method = _method!.Value,
             Uri = _uri!,
             Version = _version!.Value,
-            Headers = _headers?.ToImmutableList()
+            Headers = _headers?.ToImmutableList(),
+            RawBytes = Bytes.ToImmutableList()
         };
+    }
+
+    /// <summary>
+    /// Quality of Life Method, that returns the content length header before building the HttpRequest
+    /// </summary>
+    /// <returns>The content length</returns>
+    public int GetContentLength()
+    {
+        if (_headers == null)
+        {
+            throw new ArgumentNullException(nameof(_headers));
+        }
+
+        var contentLength = _headers.SingleOrDefault(header => header.Key == "Content-Length");
+        if (contentLength == null)
+        {
+            // if this header is not present we assume there is no entity body
+            return 0;
+        }
+
+        if (!int.TryParse(contentLength.Value, out var length))
+        {
+            throw new ArgumentException("Content-Length header must be of type integer");
+        }
+        
+        return length;
     }
 }

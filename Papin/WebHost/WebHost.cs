@@ -1,7 +1,8 @@
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
+using Papin.Http;
 using Papin.Utils;
+using Papin.Utils.Algorithms;
 
 namespace Papin.WebHost;
 
@@ -10,7 +11,6 @@ public class WebHost : IWebHost
     private readonly Dictionary<string, Action> _routes;
     
     private readonly Socket _serverSocket;
-    private readonly WaitHandle _waitHandle;
 
     public WebHost(Dictionary<string, Action> routes)
     {
@@ -19,7 +19,6 @@ public class WebHost : IWebHost
         _serverSocket = new Socket(IPAddress.Any.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         _serverSocket.Bind(new IPEndPoint(IPAddress.Loopback, 5000));
         _serverSocket.Listen(10);
-        _waitHandle = new Mutex();
     }
     
     public async Task Start()
@@ -29,14 +28,38 @@ public class WebHost : IWebHost
         {
             var clientSocket = await _serverSocket.AcceptAsync();
             Logger.WriteInfo($"Accepted connection request from {clientSocket.RemoteEndPoint!}");
-            await Task.Run(async () => await AnalyzeHttpFromSocket(clientSocket));
+            var httpRequest = await AnalyzeHttpFromSocket(clientSocket);
         }
     }
 
-    private static async Task AnalyzeHttpFromSocket(Socket clientSocket)
+    private static async Task<HttpRequest> AnalyzeHttpFromSocket(Socket clientSocket)
     {
-        byte[] buffer = new byte[1024];
-        var c = await clientSocket.ReceiveAsync(buffer);
-        Console.WriteLine(Encoding.UTF8.GetString(buffer));
+        HttpRequestBuilder builder = new();
+        var buffer = new byte[1024];
+        int? httpPackageSize = null;
+        while (true)
+        {
+            var receivedBytes = await clientSocket.ReceiveAsync(buffer);
+            builder.Bytes.AddRange(buffer[..receivedBytes]);
+            if (builder.Bytes.FindSequence(HttpRequest.HeaderEntityBodySeparator, out int index))
+            {
+                builder.ParseRequestMessageHeader(builder.Bytes.GetRange(0, index).ToArray());
+                // content length only indicates the size of the entity body + 4 for the line separator between
+                // MessageHeader and EntityBody
+                httpPackageSize = builder.GetContentLength() + builder.HeaderLength + 4;
+            }
+
+            if (receivedBytes != 1024)
+            {
+                break;
+            }
+            
+            if (httpPackageSize != null && httpPackageSize == builder.Bytes.Count)
+            {
+                break;
+            }            
+        }
+
+        return builder.Build();
     }
 }
