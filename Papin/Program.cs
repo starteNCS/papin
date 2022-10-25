@@ -3,4 +3,4 @@
 var builder = new WebHostBuilder();
 
 
-builder.Build().Start();
+await builder.Build().Start();

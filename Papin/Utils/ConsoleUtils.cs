@@ -6,6 +6,11 @@ public static class Logger
     {
         WriteCustom(ConsoleColor.Green, "INFO", text);
     }
+
+    public static void WriteError(string text)
+    {
+        WriteCustom(ConsoleColor.Red, "ERROR", text);
+    }
     
     private static void WriteCustom(ConsoleColor color, string title, string text)
     {

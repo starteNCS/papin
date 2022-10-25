@@ -1,5 +1,3 @@
-using Papin.Response;
-
 namespace Papin.WebHost;
 
 public class WebHostBuilder

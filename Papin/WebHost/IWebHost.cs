@@ -2,5 +2,5 @@ namespace Papin.WebHost;
 
 public interface IWebHost
 {
-    public void Start();
+    public Task Start();
 }
