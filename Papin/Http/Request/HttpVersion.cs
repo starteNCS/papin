@@ -1,6 +1,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
-namespace Papin.Http;
+namespace Papin.Http.Request;
 
 public enum HttpVersion
 {

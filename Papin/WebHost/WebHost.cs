@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Papin.Http;
+using Papin.Http.Request;
 using Papin.Utils;
 using Papin.Utils.Algorithms;
 using Papin.Utils.Models;

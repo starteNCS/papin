@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using System.Text;
 
-namespace Papin.Http;
+namespace Papin.Http.Request;
 
 public class HttpRequestBuilder
 {

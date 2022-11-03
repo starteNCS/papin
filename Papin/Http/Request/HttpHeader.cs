@@ -1,4 +1,4 @@
-namespace Papin.Http;
+namespace Papin.Http.Request;
 
 public record HttpHeader
 {

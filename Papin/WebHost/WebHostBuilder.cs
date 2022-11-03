@@ -1,5 +1,5 @@
 using Papin.Utils.Models;
-using HttpMethod = Papin.Http.HttpMethod;
+using HttpMethod = Papin.Http.Request.HttpMethod;
 
 namespace Papin.WebHost;
 
