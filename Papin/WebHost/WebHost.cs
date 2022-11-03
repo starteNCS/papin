@@ -26,20 +26,29 @@ public class WebHost : IWebHost
         Logger.WriteInfo("Starting Webhost... Waiting for connections");
         while (true)
         {
-            var clientSocket = await _serverSocket.AcceptAsync();
+            var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var clientSocket = await _serverSocket.AcceptAsync(CancellationToken.None);
             Logger.WriteInfo($"Accepted connection request from {clientSocket.RemoteEndPoint!}");
-            var httpRequest = await AnalyzeHttpFromSocket(clientSocket);
+            try
+            {
+                var httpRequest = await AnalyzeHttpFromSocket(clientSocket, tokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // todo: send timeout
+            }
+            
         }
     }
 
-    private static async Task<HttpRequest> AnalyzeHttpFromSocket(Socket clientSocket)
+    private static async Task<HttpRequest> AnalyzeHttpFromSocket(Socket clientSocket, CancellationToken token)
     {
         HttpRequestBuilder builder = new();
         var buffer = new byte[1024];
         int? httpPackageSize = null;
         while (true)
         {
-            var receivedBytes = await clientSocket.ReceiveAsync(buffer);
+            var receivedBytes = await clientSocket.ReceiveAsync(buffer, token);
             builder.Bytes.AddRange(buffer[..receivedBytes]);
             if (builder.Bytes.FindSequence(HttpRequest.HeaderEntityBodySeparator, out int index))
             {
