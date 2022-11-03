@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
+using Papin.Http.Shared;
 
 namespace Papin.Http.Request;
 
@@ -7,7 +8,7 @@ public class HttpRequestBuilder
 {
     private HttpMethod? _method;
     private string? _uri;
-    private HttpVersion? _version;
+    private string? _version;
 
     private IEnumerable<HttpHeader>? _headers;
 
@@ -71,7 +72,7 @@ public class HttpRequestBuilder
 
         _method = parts[0].ToHttpMethod();
         _uri = parts[1];
-        _version = parts[2].ToHttpVersion();
+        _version = parts[2];
     }
 
     /// <summary>
@@ -135,7 +136,7 @@ public class HttpRequestBuilder
         {
             Method = _method!.Value,
             Uri = _uri!,
-            Version = _version!.Value,
+            Version = _version!,
             Headers = _headers?.ToImmutableList(),
             RawBytes = Bytes.ToImmutableList()
         };

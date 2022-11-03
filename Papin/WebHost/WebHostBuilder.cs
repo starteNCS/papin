@@ -1,3 +1,4 @@
+using Papin.Http.Response;
 using Papin.Utils.Models;
 using HttpMethod = Papin.Http.Request.HttpMethod;
 
@@ -12,7 +13,7 @@ public class WebHostBuilder
         _routes = new List<Route>();
     }
 
-    public void AddRoute(HttpMethod method, string route, Action handler)
+    public void AddRoute(HttpMethod method, string route, Func<HttpResponse> handler)
     {
         _routes.Add(new Route(method, route, handler));
     }

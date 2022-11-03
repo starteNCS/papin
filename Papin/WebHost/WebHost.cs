@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using Papin.Http;
 using Papin.Http.Request;
+using Papin.Http.Response;
 using Papin.Utils;
 using Papin.Utils.Algorithms;
 using Papin.Utils.Models;
@@ -41,11 +43,16 @@ public class WebHost : IWebHost
                     return;
                 }
 
-                route.Handler();
+                HttpResponse response = route.Handler();
+                
+                Console.Write(Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(response.ToString())));
+                clientSocket.Send(Encoding.ASCII.GetBytes(response.ToString()));
+                clientSocket.Close();
             }
             catch (OperationCanceledException)
             {
                 // todo: send timeout
+                clientSocket.Close();
             }
         }
     }
