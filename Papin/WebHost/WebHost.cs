@@ -33,27 +33,47 @@ public class WebHost : IWebHost
             var tokenSource = new CancellationTokenSource(10_000_000);
             var clientSocket = await _serverSocket.AcceptAsync(CancellationToken.None);
             Logger.WriteInfo($"Accepted connection request from {clientSocket.RemoteEndPoint!}");
-            try
-            {
-                var httpRequest = await AnalyzeHttpFromSocket(clientSocket, tokenSource.Token);
-                var route = _routes.SingleOrDefault(r => r.Uri == httpRequest.Uri && r.Method == httpRequest.Method);
-                if (route == null)
-                {
-                    // todo: return 404
-                    return;
-                }
+            await HandleScope(clientSocket, tokenSource);
+        }
+    }
 
-                HttpResponse response = route.Handler();
-                
-                Console.Write(Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(response.ToString())));
-                clientSocket.Send(Encoding.ASCII.GetBytes(response.ToString()));
-                clientSocket.Close();
-            }
-            catch (OperationCanceledException)
+    private async Task HandleScope(Socket clientSocket, CancellationTokenSource tokenSource)
+    {
+        try
+        {
+            var httpRequest = await AnalyzeHttpFromSocket(clientSocket, tokenSource.Token);
+            var route = _routes.SingleOrDefault(r => r.Uri == httpRequest.Uri);
+            if (route == null)
             {
-                // todo: send timeout
-                clientSocket.Close();
+                var responseNotFound = new HttpResponseBuilder()
+                    .SetStatus(HttpStatus.NotFound)
+                    .Build();
+                clientSocket.SendHttpResponse(responseNotFound);
+                return;
             }
+
+            if (route.Method != httpRequest.Method)
+            {
+                var responseNotFound = new HttpResponseBuilder()
+                    .SetStatus(HttpStatus.MethodNotAllowed)
+                    .Build();
+                clientSocket.SendHttpResponse(responseNotFound);
+                return;
+            }
+
+            HttpResponse response = route.Handler();
+
+            clientSocket.SendHttpResponse(response);
+            clientSocket.Close();
+        }
+        catch (OperationCanceledException)
+        {
+            // todo: send timeout
+            var response = new HttpResponseBuilder()
+                .SetStatus(HttpStatus.RequestTimeOut)
+                .Build();
+            clientSocket.SendHttpResponse(response);
+            clientSocket.Close();
         }
     }
 

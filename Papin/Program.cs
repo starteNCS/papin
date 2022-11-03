@@ -10,7 +10,7 @@ builder.AddRoute(HttpMethod.GET, "/", () =>
     Logger.WriteInfo("Hallo");
 
     return new HttpResponseBuilder()
-        .SetStatus(HttpStatus.NotFound)
+        .SetStatus(HttpStatus.Ok)
         .Build();
 });
 
