@@ -2,17 +2,32 @@ using Papin.Http.Shared;
 
 namespace Papin.Http.Response;
 
+/// <summary>
+/// Used to build http responses reliably
+/// </summary>
 public class HttpResponseBuilder
 {
     private const string? _version = HttpVersion.HTTP1_1;
     private int? _statusCode;
 
+    /// <summary>
+    /// Sets the http status code for the current response
+    /// </summary>
+    /// <param name="statusCode">Http status code</param>
+    /// <returns>The adjusted response Builder</returns>
     public HttpResponseBuilder SetStatus(int statusCode)
     {
         _statusCode = statusCode;
         return this;
     }
 
+    /// <summary>
+    /// Builds the response using all the provided values
+    /// </summary>
+    /// <returns>A valid http response</returns>
+    /// <exception cref="ArgumentException">
+    /// - StatusLine is invalid (code not set)
+    /// </exception>
     public HttpResponse Build()
     {
         if (_version == null || _statusCode == null)
