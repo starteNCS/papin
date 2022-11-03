@@ -3,16 +3,17 @@ using System.Net.Sockets;
 using Papin.Http;
 using Papin.Utils;
 using Papin.Utils.Algorithms;
+using Papin.Utils.Models;
 
 namespace Papin.WebHost;
 
 public class WebHost : IWebHost
 {
-    private readonly Dictionary<string, Action> _routes;
+    private readonly List<Route> _routes;
     
     private readonly Socket _serverSocket;
 
-    public WebHost(Dictionary<string, Action> routes)
+    public WebHost(List<Route> routes)
     {
         _routes = routes;
         
@@ -26,18 +27,25 @@ public class WebHost : IWebHost
         Logger.WriteInfo("Starting Webhost... Waiting for connections");
         while (true)
         {
-            var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var tokenSource = new CancellationTokenSource(10_000_000);
             var clientSocket = await _serverSocket.AcceptAsync(CancellationToken.None);
             Logger.WriteInfo($"Accepted connection request from {clientSocket.RemoteEndPoint!}");
             try
             {
                 var httpRequest = await AnalyzeHttpFromSocket(clientSocket, tokenSource.Token);
+                var route = _routes.SingleOrDefault(r => r.Uri == httpRequest.Uri && r.Method == httpRequest.Method);
+                if (route == null)
+                {
+                    // todo: return 404
+                    return;
+                }
+
+                route.Handler();
             }
             catch (OperationCanceledException)
             {
                 // todo: send timeout
             }
-            
         }
     }
 

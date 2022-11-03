@@ -1,24 +1,24 @@
+using Papin.Utils.Models;
+using HttpMethod = Papin.Http.HttpMethod;
+
 namespace Papin.WebHost;
 
 public class WebHostBuilder
 {
-    private Dictionary<string, Action> Routes { get; set; }
+    private readonly List<Route> _routes;
 
     public WebHostBuilder()
     {
-        Routes = new Dictionary<string, Action>();
+        _routes = new List<Route>();
     }
 
-    public void AddRoute(string route, Action handler)
+    public void AddRoute(HttpMethod method, string route, Action handler)
     {
-        if (!Routes.TryAdd(route, handler))
-        {
-            throw new ArgumentException($"Could not add '{route}' to routes");
-        }
+        _routes.Add(new Route(method, route, handler));
     }
 
     public WebHost Build()
     {
-        return new WebHost(Routes);
+        return new WebHost(_routes);
     }
 }
