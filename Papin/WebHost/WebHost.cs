@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -41,6 +42,7 @@ public class WebHost : IWebHost
     {
         try
         {
+            Stopwatch sw = Stopwatch.StartNew();
             var httpRequest = await AnalyzeHttpFromSocket(clientSocket, tokenSource.Token);
             var possibleRoutes = _routes.Where(r => r.Uri == httpRequest.Uri).ToList();
             if (!possibleRoutes.Any())
@@ -62,10 +64,12 @@ public class WebHost : IWebHost
                 return;
             }
 
-            HttpResponse response = route.Handler();
+            HttpResponse response = route.Handler(httpRequest);
 
             clientSocket.SendHttpResponse(response);
             clientSocket.Close();
+            sw.Stop();
+            Logger.WriteInfo($"Successfully handled request in {sw.ElapsedMilliseconds}ms");
         }
         catch (OperationCanceledException)
         {
@@ -74,6 +78,7 @@ public class WebHost : IWebHost
                 .Build();
             clientSocket.SendHttpResponse(response);
             clientSocket.Close();
+            Logger.WriteError("Request timed out");
         }
     }
 
@@ -92,6 +97,8 @@ public class WebHost : IWebHost
                 // content length only indicates the size of the entity body + 4 for the line separator between
                 // MessageHeader and EntityBody
                 httpPackageSize = builder.GetContentLength() + builder.HeaderLength + 4;
+                // + 4 for the line separator between
+                builder.SetBodyStartIndex(index + 4);
             }
 
             if (receivedBytes != 1024)

@@ -9,11 +9,19 @@ public class HttpRequestBuilder
     private HttpMethod? _method;
     private string? _uri;
     private string? _version;
+    /// <summary>
+    /// Body string. will be serialized when built
+    /// </summary>
+    private string? _body;
 
     private IEnumerable<HttpHeader>? _headers;
 
     public List<byte> Bytes { get; } = new();
     public int? HeaderLength { get; private set; }
+    /// <summary>
+    /// Indicates where at which index in the [Bytes] List the body starts
+    /// </summary>
+    public int? BodyStartIndex { get; private set; }
 
     /// <summary>
     /// Start the http request builder using a full plain text http request
@@ -38,7 +46,7 @@ public class HttpRequestBuilder
         HeaderLength = bytes.Length;
         ParseRequestMessageHeader(Encoding.ASCII.GetString(bytes));
     }
-    
+
     /// <summary>
     /// Parses the Request Message Header (Request-Line and Headers)
     /// </summary>
@@ -48,9 +56,9 @@ public class HttpRequestBuilder
         {
             HeaderLength = Encoding.ASCII.GetByteCount(requestMessageHeader);
         }
-        
+
         var lines = requestMessageHeader.Split("\r\n");
-        
+
         ParseRequestLine(lines[0]);
         ParseHeaderFields(lines[1..]);
     }
@@ -90,7 +98,7 @@ public class HttpRequestBuilder
             {
                 throw new ArgumentException("Invalid Header received");
             }
-            
+
             return new HttpHeader
             {
                 Key = header[..separator],
@@ -98,6 +106,15 @@ public class HttpRequestBuilder
                 Value = header[(separator + 2)..]
             };
         });
+    }
+
+    /// <summary>
+    /// Sets the Body Start index
+    /// </summary>
+    /// <param name="index">Body start index</param>
+    public void SetBodyStartIndex(int index)
+    {
+        BodyStartIndex = index;
     }
 
     /// <summary>
@@ -119,7 +136,7 @@ public class HttpRequestBuilder
 
         return true;
     }
-    
+
     /// <summary>
     /// Builds a HttpRequest with all the collected data
     /// </summary>
@@ -132,12 +149,19 @@ public class HttpRequestBuilder
             throw new ArgumentException("Invalid HttpRequest build");
         }
 
+        string body = string.Empty;
+        if (BodyStartIndex != null)
+        {
+            body = Encoding.ASCII.GetString(Bytes.Skip(BodyStartIndex.Value).ToArray());
+        }
+
         return new HttpRequest
         {
             Method = _method!.Value,
             Uri = _uri!,
             Version = _version!,
             Headers = _headers?.ToImmutableList(),
+            Body = body,
             RawBytes = Bytes.ToImmutableList()
         };
     }
@@ -164,7 +188,7 @@ public class HttpRequestBuilder
         {
             throw new ArgumentException("Content-Length header must be of type integer");
         }
-        
+
         return length;
     }
 }
