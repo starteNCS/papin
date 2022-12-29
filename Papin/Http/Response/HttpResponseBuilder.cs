@@ -10,6 +10,7 @@ public class HttpResponseBuilder
     private const string? _version = HttpVersion.HTTP1_1;
     private int? _statusCode;
     private object? _body;
+    private readonly Dictionary<string, string> _headers = new();
 
     /// <summary>
     /// Sets the http status code for the current response
@@ -19,6 +20,18 @@ public class HttpResponseBuilder
     public HttpResponseBuilder SetStatus(int statusCode)
     {
         _statusCode = statusCode;
+        return this;
+    }
+
+    /// <summary>
+    /// Adds one http header per call
+    /// </summary>
+    /// <param name="header">Name of the header</param>
+    /// <param name="value">Value of the header</param>
+    /// <returns>The adjusted response builder</returns>
+    public HttpResponseBuilder AddHeader(string header, string value)
+    {
+        _headers.Add(header, value);
         return this;
     }
 
@@ -51,8 +64,8 @@ public class HttpResponseBuilder
         {
             Version = _version!,
             StatusCode = _statusCode.Value,
+            Headers = _headers,
             Body = _body
         };
     }
-
 }

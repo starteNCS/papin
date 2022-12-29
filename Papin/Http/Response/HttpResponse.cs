@@ -17,6 +17,10 @@ public sealed record HttpResponse
     public override string ToString()
     {
         var builder = new StringBuilder();
+        if (Body != null && !Headers.ContainsKey("Content-Type"))
+        {
+            Headers.Add("Content-Type", "application/json");
+        }
 
         // StatusLine
         builder.Append(Version);
@@ -25,6 +29,15 @@ public sealed record HttpResponse
         builder.Append(' ');
         builder.Append(HttpStatus.ToReasonPhrase(StatusCode));
         builder.Append("\r\n");
+
+        // Headers
+        foreach (var header in Headers)
+        {
+            builder.Append(header.Key);
+            builder.Append(": ");
+            builder.Append(header.Value);
+            builder.Append("\r\n");
+        }
 
         // Headers - Body dividing line
         builder.Append("\r\n");
