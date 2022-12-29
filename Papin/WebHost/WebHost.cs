@@ -13,18 +13,18 @@ namespace Papin.WebHost;
 public class WebHost : IWebHost
 {
     private readonly List<Route> _routes;
-    
+
     private readonly Socket _serverSocket;
 
     public WebHost(List<Route> routes)
     {
         _routes = routes;
-        
+
         _serverSocket = new Socket(IPAddress.Any.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         _serverSocket.Bind(new IPEndPoint(IPAddress.Loopback, 5000));
         _serverSocket.Listen(10);
     }
-    
+
     public async Task Start()
     {
         Logger.WriteInfo("Starting Webhost... Waiting for connections");
@@ -42,8 +42,8 @@ public class WebHost : IWebHost
         try
         {
             var httpRequest = await AnalyzeHttpFromSocket(clientSocket, tokenSource.Token);
-            var route = _routes.SingleOrDefault(r => r.Uri == httpRequest.Uri);
-            if (route == null)
+            var possibleRoutes = _routes.Where(r => r.Uri == httpRequest.Uri).ToList();
+            if (!possibleRoutes.Any())
             {
                 var responseNotFound = new HttpResponseBuilder()
                     .SetStatus(HttpStatus.NotFound)
@@ -52,7 +52,8 @@ public class WebHost : IWebHost
                 return;
             }
 
-            if (route.Method != httpRequest.Method)
+            var route = possibleRoutes.FirstOrDefault(pr => pr.Method == httpRequest.Method);
+            if (route == null)
             {
                 var responseNotFound = new HttpResponseBuilder()
                     .SetStatus(HttpStatus.MethodNotAllowed)
@@ -68,7 +69,6 @@ public class WebHost : IWebHost
         }
         catch (OperationCanceledException)
         {
-            // todo: send timeout
             var response = new HttpResponseBuilder()
                 .SetStatus(HttpStatus.RequestTimeOut)
                 .Build();
@@ -98,11 +98,11 @@ public class WebHost : IWebHost
             {
                 break;
             }
-            
+
             if (httpPackageSize != null && httpPackageSize == builder.Bytes.Count)
             {
                 break;
-            }            
+            }
         }
 
         return builder.Build();
