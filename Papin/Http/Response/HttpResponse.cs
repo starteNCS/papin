@@ -24,10 +24,10 @@ public sealed record HttpResponse
         builder.Append(StatusCode);
         builder.Append(' ');
         builder.Append(HttpStatus.ToReasonPhrase(StatusCode));
-        builder.Append('\r', '\n');
+        builder.Append("\r\n");
 
         // Headers - Body dividing line
-        builder.Append('\r', '\n');
+        builder.Append("\r\n");
 
         // Body
         if (Body != null)
