@@ -4,7 +4,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>0.0.3</Version>
+        <Version>0.0.4</Version>
         <Title>Papin Webhost</Title>
         <Description>A simple Http Server Implementation</Description>
         <RepositoryUrl>https://github.com/starteNCS/papin</RepositoryUrl>
