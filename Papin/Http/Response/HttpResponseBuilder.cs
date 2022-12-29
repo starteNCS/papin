@@ -9,6 +9,7 @@ public class HttpResponseBuilder
 {
     private const string? _version = HttpVersion.HTTP1_1;
     private int? _statusCode;
+    private object? _body;
 
     /// <summary>
     /// Sets the http status code for the current response
@@ -18,6 +19,17 @@ public class HttpResponseBuilder
     public HttpResponseBuilder SetStatus(int statusCode)
     {
         _statusCode = statusCode;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the http body for the current response
+    /// </summary>
+    /// <param name="body">Body</param>
+    /// <returns>The adjusted response builder</returns>
+    public HttpResponseBuilder SetBody(object body)
+    {
+        _body = body;
         return this;
     }
 
@@ -38,8 +50,9 @@ public class HttpResponseBuilder
         return new HttpResponse
         {
             Version = _version!,
-            StatusCode = _statusCode.Value
+            StatusCode = _statusCode.Value,
+            Body = _body
         };
     }
-    
+
 }

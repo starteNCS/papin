@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 
 namespace Papin.Http.Response;
 
@@ -7,6 +8,7 @@ public sealed record HttpResponse
     public string Version { get; set; } = string.Empty;
     public int StatusCode { get; set; }
     public Dictionary<string, string> Headers { get; set; } = new();
+    public object? Body { get; set; }
 
     /// <summary>
     /// Creates the HTTP1.1 Version of the response string
@@ -24,10 +26,16 @@ public sealed record HttpResponse
         builder.Append(HttpStatus.ToReasonPhrase(StatusCode));
         builder.Append('\r', '\n');
 
-        // Headers - Body 
+        // Headers - Body dividing line
         builder.Append('\r', '\n');
-        
+
+        // Body
+        if (Body != null)
+        {
+            builder.Append(JsonSerializer.Serialize(Body));
+        }
+
         return builder.ToString();
     }
-    
+
 }
