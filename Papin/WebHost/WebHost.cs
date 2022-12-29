@@ -64,7 +64,7 @@ public class WebHost : IWebHost
                 return;
             }
 
-            HttpResponse response = route.Handler(httpRequest);
+            HttpResponse response = await route.Handler(httpRequest);
 
             clientSocket.SendHttpResponse(response);
             clientSocket.Close();

@@ -16,6 +16,11 @@ public class WebHostBuilder
 
     public void AddRoute(HttpMethod method, string route, Func<HttpRequest, HttpResponse> handler)
     {
+        _routes.Add(new Route(method, route, req => Task.FromResult(handler(req))));
+    }
+
+    public void AddRoute(HttpMethod method, string route, Func<HttpRequest, Task<HttpResponse>> handler)
+    {
         _routes.Add(new Route(method, route, handler));
     }
 
