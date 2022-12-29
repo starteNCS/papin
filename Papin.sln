@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Papin", "Papin\Papin.csproj", "{B7CA408B-C40C-49E6-A814-08E7D5FDC2C0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Papin.Example", "Papin.Example\Papin.Example.csproj", "{398F95E0-719B-4D10-BC52-F17D445011FA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{B7CA408B-C40C-49E6-A814-08E7D5FDC2C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7CA408B-C40C-49E6-A814-08E7D5FDC2C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7CA408B-C40C-49E6-A814-08E7D5FDC2C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{398F95E0-719B-4D10-BC52-F17D445011FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{398F95E0-719B-4D10-BC52-F17D445011FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{398F95E0-719B-4D10-BC52-F17D445011FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{398F95E0-719B-4D10-BC52-F17D445011FA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
